@@ -15,6 +15,7 @@ from zope.interface import implementer
 from twisted.python import filepath, failure
 from twisted.internet import defer
 import time, uuid
+from colorama import Fore, Style
 
 # GENERATE VIRTUAL FILESYSTEM FOR USER HERE?
 class VirtualFTPRealm(FTPRealm):
@@ -49,15 +50,15 @@ class PatchedFtpProtocol(FTP):
     def connectionMade(self):
         ms_time = int(round(time.time() * 1000))
         self.connected_client = self.transport.getPeer()
-        print(f'[{ms_time}] New client connected! [{self.connected_client.host}:{self.connected_client.port}] [{self.proto_instance}]')
+        print(f'[{ms_time}] {Fore.GREEN}New client connected!{Style.RESET_ALL} {Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL}')
         FTP.connectionMade(self)
     def lineReceived(self, line):
         ms_time = int(round(time.time() * 1000))
-        print(f'[{ms_time}]   [{self.connected_client.host}:{self.connected_client.port}] [{self.proto_instance}] Command Received: {line}')
+        print(f'[{ms_time}]   {Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} Command Received: {line}')
         FTP.lineReceived(self, line)
     def connectionLost(self, reason):
         ms_time = int(round(time.time() * 1000))
-        print(f'[{ms_time}] Client disconnected! [{self.connected_client.host}:{self.connected_client.port}] [{self.proto_instance}]')
+        print(f'[{ms_time}] {Fore.RED}Client disconnected!{Style.RESET_ALL} {Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL}')
         FTP.connectionLost(self, reason)
 
     # patching login to convert username and password to bytes
