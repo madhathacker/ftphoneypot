@@ -24,7 +24,7 @@ A high-interaction FTP honeypot written in Python with [Twisted](https://twisted
 - Boobytrap file exports
 - Save transfered files for analysis
 - Log connections to FTP server
-- Log all actions taken by FTP users
+- [Log all actions](https://betterstack.com/community/guides/logging/how-to-start-logging-with-python/) taken by FTP users
 
 
 ## Notes

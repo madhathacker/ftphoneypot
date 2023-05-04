@@ -12,7 +12,7 @@ from twisted.cred.checkers import AllowAnonymousAccess, FilePasswordDB
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
 from twisted.protocols.ftp import FTPFactory, FTPRealm
-from mytwisted import PatchedFtpProtocol, DenyAllAccess
+from mytwisted import PatchedFtpProtocol, DenyAllAccess, AllowAllAccess
 
 config_path = '.'
 config_name = "config.yaml"
@@ -46,21 +46,26 @@ def ftphp(cfg : DictConfig)-> None:
     anon_root = ftp_root / 'anonymous'
     pass_file = 'passwd'
 
+    
+    # Setup FTP Authentication
+    ftp_checkers = []
+    if cfg.ftphp.allow_login:
+        if cfg.ftphp.allow_anonymous:
+            ftp_checkers.append(AllowAnonymousAccess())
+        if cfg.ftphp.restrict_login:
+            ftp_checkers.append(FilePasswordDB(pass_file))
+        else:
+            ftp_checkers.append(AllowAllAccess())
+    else:
+        ftp_checkers.append(DenyAllAccess())
+    #print(ftp_checkers)
+
     # Setup FTP FileSystem
     ftp_realm = FTPRealm(anonymousRoot=anon_root, userHome=user_home)
 
-    # Setup FTP Authentication
-    ftp_checkers = []
-    if not cfg.ftphp.allow_anonymous and not cfg.ftphp.allow_login:
-        ftp_checkers.append(DenyAllAccess())
-    if cfg.ftphp.allow_anonymous:
-        ftp_checkers.append(AllowAnonymousAccess())
-    if cfg.ftphp.allow_login:
-        ftp_checkers.append(FilePasswordDB(pass_file))
-
     # Putting it all together
     try:
-        ftp_portal = Portal(realm=ftp_realm, checkers=ftp_checkers)
+        ftp_portal = Portal(checkers=ftp_checkers, realm=ftp_realm)
         ftp_factory = FTPFactory(portal=ftp_portal)
         ftp_factory.protocol = PatchedFtpProtocol
         ftp_factory.welcomeMessage = ftp_banner

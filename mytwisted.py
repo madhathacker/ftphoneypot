@@ -13,6 +13,7 @@ from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred import credentials, error as cred_error
 from zope.interface import implementer
 from twisted.python import failure
+from twisted.internet import defer
 
 @implementer(ICredentialsChecker)
 class DenyAllAccess:
@@ -20,12 +21,31 @@ class DenyAllAccess:
 
     def requestAvatarId(self, credentials):
         return failure.Failure(cred_error.UnauthorizedLogin())
-    
+
+@implementer(ICredentialsChecker)
+class AllowAllAccess:
+    credentialInterfaces = (credentials.IUsernamePassword,)
+
+    def requestAvatarId(self, credentials):
+        return defer.succeed(credentials.username)
+
 GUEST_LOGGED_IN_PROCEED = "230.2"
 USR_LOGGED_IN_PROCEED = "230.1"
 AUTH_FAILURE = "530.2"
 
 class PatchedFtpProtocol(FTP):
+    def connectionMade(self):
+        self.__logInfo('connected', '', True)
+        FTP.connectionMade(self)
+
+    def connectionLost(self, reason):
+        self.__logInfo('disconnected', '', True)
+        FTP.connectionLost(self, reason)
+
+    def lineReceived(self, line):
+        self.__logInfo('command', line, True)
+        FTP.lineReceived(self, line)
+
     # patching login to convert username and password to bytes
     def ftp_PASS(self, password):
         """
@@ -39,7 +59,7 @@ class PatchedFtpProtocol(FTP):
         else:
             # user login
             # THIS IS THE PATCH! CONVERT USER & PASSW TO BYTES STRING BEFORE CREATING CRED OBJECT!
-            creds = credentials.UsernamePassword(bytes(self._user, 'utf-8'), bytes(password, 'utf-8'))
+            creds = credentials.UsernamePassword(self._user.encode('utf-8'), password.encode('utf-8'))
             reply = USR_LOGGED_IN_PROCEED
         del self._user
 
