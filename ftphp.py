@@ -10,7 +10,7 @@ from twisted.cred.checkers import AllowAnonymousAccess, FilePasswordDB
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
 from twisted.protocols.ftp import FTPFactory, FTPRealm, FTP, AuthorizationError, IFTPShell
-import pathlib as Path
+from pathlib import Path
 
 # Required for Patched Login
 from twisted.cred import credentials, error as cred_error
@@ -35,7 +35,6 @@ def main():
             else:
                 # user login
                 # THIS IS THE PATCH! CONVERT USER & PASSW TO BYTES STRING BEFORE CREATING CRED OBJECT!
-                print(f"{self._user=}:{password=}")
                 creds = credentials.UsernamePassword(bytes(self._user, 'utf-8'), bytes(password, 'utf-8'))
                 reply = USR_LOGGED_IN_PROCEED
             del self._user
