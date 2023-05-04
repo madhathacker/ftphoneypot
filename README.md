@@ -9,7 +9,6 @@ A high-interaction FTP honeypot written in Python with [Twisted](https://twisted
 - Perform more efficiently than an actual FTP server.
 - Collect more verbose information on attackers than would normally be accessible from standard FTP servers.
 
-
 ### Additional Goals:
 - The option to emulate a specific version/type of FTP server.
 - Customize the emulated filesystem and create boobytraps with "hackback" files.
@@ -19,11 +18,16 @@ A high-interaction FTP honeypot written in Python with [Twisted](https://twisted
 - ~~Create a simple FTP server that users can connect to~~
 - ~~Anonymous Login~~
 - ~~Allow users to login with specified credentials~~
-- Alter the displayed FTP banner (check NMAP Signatures)
-- Configure file directory
+- ~~Alter the displayed FTP banner (check NMAP Signatures)~~
+- ~~Add [configuration file support](https://towardsdatascience.com/from-novice-to-expert-how-to-write-a-configuration-file-in-python-273e171a8eb3)~~
+- Configure file directory with [temporary file systems](https://www.pyfilesystem.org/page/tempfs/)
+- Boobytrap file exports
+- Save transfered files for analysis
 - Log connections to FTP server
 - Log all actions taken by FTP users
 
+
+## Notes
 
 ### Nmap Service Identification Details
 
@@ -43,3 +47,9 @@ sslports 989,990,992,995
 ```
 
 `grep 'match ftp' nmap-service-probes > ~/ftp_probes.txt`
+
+### FTP Details
+
+https://datatracker.ietf.org/doc/html/rfc959
+
+https://docs.twisted.org/en/latest/api/twisted.protocols.ftp.html

@@ -2,68 +2,46 @@
 """
 An example FTP server with minimal user authentication from Twisted Documentation. 
 """
-# Patched version of Twisted example. Patch is based on fixing bug in Twisted FTP creds check
-# https://github.com/twisted/twisted/blob/1d439dd1d9c7d302641550a925705d479ea5457f/src/twisted/protocols/ftp.py
-# https://github.com/twisted/twisted/tree/1d439dd1d9c7d302641550a925705d479ea5457f/src/twisted/cred
 
+from dataclasses import dataclass
+import hydra
+from hydra.core.config_store import ConfigStore
+from omegaconf import DictConfig, OmegaConf, MISSING
+from pathlib import Path
 from twisted.cred.checkers import AllowAnonymousAccess, FilePasswordDB
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
-from twisted.protocols.ftp import FTPFactory, FTPRealm, FTP, AuthorizationError, IFTPShell
-from pathlib import Path
+from twisted.protocols.ftp import FTPFactory, FTPRealm
+from mytwisted import PatchedFtpProtocol, DenyAllAccess
 
-# Required for Patched Login
-from twisted.cred import credentials, error as cred_error
+config_path = '.'
+config_name = "config.yaml"
 
+# @dataclass(frozen=True) means they are read-only fields
+@dataclass
+class ftphp_config:
+  ftp_port: int = 2121
+  ftp_banner: str = "Fucking Twisted Python Honey Pot"
+  allow_anonymous: bool = True
+  allow_login: bool= True
+  high_interaction: bool = True
+  ftp_root: str = 'root'
+  pass_file: str = 'passwd'
 
-def main():
-    GUEST_LOGGED_IN_PROCEED = "230.2"
-    USR_LOGGED_IN_PROCEED = "230.1"
-    AUTH_FAILURE = "530.2"
+cs = ConfigStore.instance()
+cs.store(name="ftphp_config", node=config_name)
 
-    class PatchedFtpProtocol(FTP):
-        # patching login to convert username and password to bytes
-        def ftp_PASS(self, password):
-            """
-            Second part of login.  Get the password the peer wants to
-            authenticate with.
-            """
-            if self.factory.allowAnonymous and self._user == self.factory.userAnonymous:
-                # anonymous login
-                creds = credentials.Anonymous()
-                reply = GUEST_LOGGED_IN_PROCEED
-            else:
-                # user login
-                # THIS IS THE PATCH! CONVERT USER & PASSW TO BYTES STRING BEFORE CREATING CRED OBJECT!
-                creds = credentials.UsernamePassword(bytes(self._user, 'utf-8'), bytes(password, 'utf-8'))
-                reply = USR_LOGGED_IN_PROCEED
-            del self._user
-
-            def _cbLogin(result):
-                (interface, avatar, logout) = result
-                assert interface is IFTPShell, "The realm is busted, jerk."
-                self.shell = avatar
-                self.logout = logout
-                self.workingDirectory = []
-                self.state = self.AUTHED
-                return reply
-
-            def _ebLogin(failure):
-                failure.trap(cred_error.UnauthorizedLogin, cred_error.UnhandledCredentials)
-                self.state = self.UNAUTH
-                raise AuthorizationError
-
-            d = self.portal.login(creds, None, IFTPShell)
-            d.addCallbacks(_cbLogin, _ebLogin)
-            return d
+@hydra.main(version_base=None, config_path=config_path, config_name=config_name)
+def ftphp(cfg : DictConfig)-> None:
+    print(OmegaConf.to_yaml(cfg))
 
     # FTP Configuration Variables
-    ftp_port = 2121
-    ftp_banner = 'Fucking Twisted Python Honey Pot'
+    ftp_port = cfg.ftphp.port
+    ftp_banner = cfg.ftphp.banner
 
     # Path Variables
     cwd = Path.cwd()
-    ftp_root = cwd / 'root'
+    ftp_root = Path(cfg.ftphp.root)
     user_home = ftp_root
     anon_root = ftp_root / 'anonymous'
     pass_file = 'passwd'
@@ -73,8 +51,12 @@ def main():
 
     # Setup FTP Authentication
     ftp_checkers = []
-    ftp_checkers.append(AllowAnonymousAccess())
-    ftp_checkers.append(FilePasswordDB(pass_file))
+    if not cfg.ftphp.allow_anonymous and not cfg.ftphp.allow_login:
+        ftp_checkers.append(DenyAllAccess())
+    if cfg.ftphp.allow_anonymous:
+        ftp_checkers.append(AllowAnonymousAccess())
+    if cfg.ftphp.allow_login:
+        ftp_checkers.append(FilePasswordDB(pass_file))
 
     # Putting it all together
     try:
@@ -92,4 +74,4 @@ def main():
         exit(-1)
 
 if __name__ == '__main__':
-    main()
+    ftphp()
