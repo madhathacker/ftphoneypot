@@ -48,6 +48,33 @@ sslports 989,990,992,995
 
 `grep 'match ftp' nmap-service-probes > ~/ftp_probes.txt`
 
+```bash
+$ nmap -p 2121 127.0.0.1
+Starting Nmap 7.80 ( https://nmap.org ) at 2023-05-04 15:10 EDT
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.000035s latency).
+
+PORT     STATE SERVICE
+2121/tcp open  ccproxy-ftp
+
+Nmap done: 1 IP address (1 host up) scanned in 0.01 seconds
+```
+
+```bash
+$ nmap -p 2121 127.0.0.1 -sC -sV
+Starting Nmap 7.80 ( https://nmap.org ) at 2023-05-04 15:11 EDT
+Nmap scan report for localhost (127.0.0.1)
+Host is up (0.000038s latency).
+
+PORT     STATE SERVICE VERSION
+2121/tcp open  ftp     vsftpd (before 2.0.8) or WU-FTPD
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+|_-rwxrwxrwx   1 root      root                   17 May 04 17:34 password.txt [NSE: writeable]
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 6.31 seconds
+```
+
 ### FTP Details
 
 https://datatracker.ietf.org/doc/html/rfc959

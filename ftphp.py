@@ -2,17 +2,23 @@
 """
 An example FTP server with minimal user authentication from Twisted Documentation. 
 """
+# Logging
 
+# Config File
 from dataclasses import dataclass
 import hydra
 from hydra.core.config_store import ConfigStore
 from omegaconf import DictConfig, OmegaConf, MISSING
-from pathlib import Path
+
+# Twisted
 from twisted.cred.checkers import AllowAnonymousAccess, FilePasswordDB
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
 from twisted.protocols.ftp import FTPFactory, FTPRealm
-from mytwisted import PatchedFtpProtocol, DenyAllAccess, AllowAllAccess
+from mytwisted import PatchedFtpProtocol, VirtualFTPRealm, DenyAllAccess, AllowAllAccess
+
+# Filepaths
+from pathlib import Path
 
 config_path = '.'
 config_name = "config.yaml"
@@ -42,11 +48,9 @@ def ftphp(cfg : DictConfig)-> None:
     # Path Variables
     cwd = Path.cwd()
     ftp_root = Path(cfg.ftphp.root)
-    user_home = ftp_root
     anon_root = ftp_root / 'anonymous'
     pass_file = 'passwd'
 
-    
     # Setup FTP Authentication
     ftp_checkers = []
     if cfg.ftphp.allow_login:
@@ -61,7 +65,7 @@ def ftphp(cfg : DictConfig)-> None:
     #print(ftp_checkers)
 
     # Setup FTP FileSystem
-    ftp_realm = FTPRealm(anonymousRoot=anon_root, userHome=user_home)
+    ftp_realm = VirtualFTPRealm(anonymousRoot=anon_root, userHome=ftp_root)
 
     # Putting it all together
     try:
