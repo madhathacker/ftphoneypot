@@ -48,15 +48,16 @@ class PatchedFtpProtocol(FTP):
         #print(f"New FTP Protocol Instance: {self.proto_instance}")
     def connectionMade(self):
         ms_time = int(round(time.time() * 1000))
-        print(f'[{ms_time}] New client connected! {self.proto_instance}')
+        self.connected_client = self.transport.getPeer()
+        print(f'[{ms_time}] New client connected! [{self.connected_client.host}:{self.connected_client.port}] [{self.proto_instance}]')
         FTP.connectionMade(self)
     def lineReceived(self, line):
         ms_time = int(round(time.time() * 1000))
-        print(f'[{ms_time}]   {self.proto_instance} Command Received: {line}')
+        print(f'[{ms_time}]   [{self.connected_client.host}:{self.connected_client.port}] [{self.proto_instance}] Command Received: {line}')
         FTP.lineReceived(self, line)
     def connectionLost(self, reason):
         ms_time = int(round(time.time() * 1000))
-        print(f'[{ms_time}] Client disconnected! {self.proto_instance}')
+        print(f'[{ms_time}] Client disconnected! [{self.connected_client.host}:{self.connected_client.port}] [{self.proto_instance}]')
         FTP.connectionLost(self, reason)
 
     # patching login to convert username and password to bytes
