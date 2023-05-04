@@ -14,6 +14,7 @@ from twisted.cred import credentials, error as cred_error
 from zope.interface import implementer
 from twisted.python import filepath, failure
 from twisted.internet import defer
+import time, uuid
 
 # GENERATE VIRTUAL FILESYSTEM FOR USER HERE?
 class VirtualFTPRealm(FTPRealm):
@@ -40,9 +41,24 @@ class AllowAllAccess:
 
 GUEST_LOGGED_IN_PROCEED = "230.2"
 USR_LOGGED_IN_PROCEED = "230.1"
-AUTH_FAILURE = "530.2"
 
 class PatchedFtpProtocol(FTP):
+    def __init__(self):
+        self.proto_instance = str(uuid.uuid1())
+        #print(f"New FTP Protocol Instance: {self.proto_instance}")
+    def connectionMade(self):
+        ms_time = int(round(time.time() * 1000))
+        print(f'[{ms_time}] New client connected! {self.proto_instance}')
+        FTP.connectionMade(self)
+    def lineReceived(self, line):
+        ms_time = int(round(time.time() * 1000))
+        print(f'[{ms_time}]   {self.proto_instance} Command Received: {line}')
+        FTP.lineReceived(self, line)
+    def connectionLost(self, reason):
+        ms_time = int(round(time.time() * 1000))
+        print(f'[{ms_time}] Client disconnected! {self.proto_instance}')
+        FTP.connectionLost(self, reason)
+
     # patching login to convert username and password to bytes
     def ftp_PASS(self, password):
         """

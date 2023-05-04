@@ -1,7 +1,7 @@
 ftphp:
   port: 2121
   # Search NMAP Signatures for server you would like to mimic
-  banner: Please login with USER and PASS
+  banner: Fucking Twisted Python Honey Pot
   allow_login: True # If True, creates virtual filesystem. Otherwise captures login only.
   allow_anonymous: True
   restrict_login: True # Whether to use passwd or allow all logins
