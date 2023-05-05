@@ -16,14 +16,23 @@ from twisted.python import filepath, failure
 from twisted.internet import defer
 import time, uuid
 from colorama import Fore, Style
+from myfactories import TempFSFactory
 
 # GENERATE VIRTUAL FILESYSTEM FOR USER HERE?
 class VirtualFTPRealm(FTPRealm):
     def __init__(self, anonymousRoot, userHome):
+        print("Initializing FTP Realm...")
         BaseFTPRealm.__init__(self, anonymousRoot)
         self.userHome = filepath.FilePath(userHome)
+        self.TempFS_factory = TempFSFactory()
+        self.TempFS_factory.start()
 
-    def getHomeDirectory(self, avatarId):
+    def stop(self):
+        self.TempFS_factory.stop()
+
+    # This function is called after user passes crednetial checker
+    def getHomeDirectory(self, avatarId): 
+        temp_home = self.TempFS_factory.get_temp_fs()
         return self.userHome.child(avatarId)
 
 @implementer(ICredentialsChecker)

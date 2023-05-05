@@ -3,6 +3,7 @@
 An example FTP server with minimal user authentication from Twisted Documentation. 
 """
 # Logging
+import myfactories
 
 # Config File
 from dataclasses import dataclass
@@ -64,11 +65,9 @@ def ftphp(cfg : DictConfig)-> None:
         ftp_checkers.append(DenyAllAccess())
     #print(ftp_checkers)
 
-    # Setup FTP FileSystem
-    ftp_realm = VirtualFTPRealm(anonymousRoot=anon_root, userHome=ftp_root)
-
     # Putting it all together
     try:
+        ftp_realm = VirtualFTPRealm(anonymousRoot=anon_root, userHome=ftp_root)
         ftp_portal = Portal(checkers=ftp_checkers, realm=ftp_realm)
         ftp_factory = FTPFactory(portal=ftp_portal)
         ftp_factory.protocol = PatchedFtpProtocol
@@ -77,7 +76,9 @@ def ftphp(cfg : DictConfig)-> None:
 
         # Starts the reactor loop on specified port and interface. Connections will be handled by the factory.
         reactor.listenTCP(port=ftp_port, factory=ftp_factory, backlog=50, interface='')
+        print("Starting Reactor...")
         reactor.run()
+        ftp_realm.stop()
     except Exception as e:
         print(e)
         exit(-1)
