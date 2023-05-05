@@ -13,27 +13,21 @@ class TempFSFactory(threading.Thread):
 
         self.replenish_event = threading.Event()
         self.stop_event = threading.Event()
-
-        for i in range(1, self.min_queue_size+1):
-            if self.stop_event.is_set():
-                return
-            temp_fs = self._generator()
-            self.fs_queue.put(temp_fs)
+        self._generator()
 
     def _generator(self):
-        temp_fs = TempFS()
-        return temp_fs
+        while self.fs_queue.qsize() < self.min_queue_size:
+            temp_fs = TempFS()
+            self.fs_queue.put(temp_fs)
 
     def run(self):
         while not self.stop_event.is_set():
-            print("Waiting to replenish!")
             self.replenish_event.wait()
             if self.stop_event.is_set():
                 return
-            print("Generating new TempFS...")
-            temp_fs = self._generator()
-            self.fs_queue.put(temp_fs)
             self.replenish_event.clear()
+            print("Generating new TempFS...")
+            self._generator()
         return
     
     def stop(self):
