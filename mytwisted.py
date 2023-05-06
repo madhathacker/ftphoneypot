@@ -99,4 +99,4 @@ class PatchedFtpProtocol(FTP):
 
         d = self.portal.login(creds, None, IFTPShell)
         d.addCallbacks(_cbLogin, _ebLogin)
-        return
+        return d
