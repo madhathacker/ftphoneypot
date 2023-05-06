@@ -22,16 +22,21 @@ class VirtualFTPRealm(FTPRealm):
         print("Initializing FTP Realm...")
         BaseFTPRealm.__init__(self, anonymousRoot)
         self.userHome = filepath.FilePath(userHome)
-        self.TempFS_factory = TempFSFactory()
-        self.TempFS_factory.start()
+        self.TempFSFactory = TempFSFactory(userHome)
+        self.TempFSFactory.start()
 
     def stop(self):
-        self.TempFS_factory.stop()
+        self.TempFSFactory.stop()
 
     # This function is called after user passes crednetial checker
-    def getHomeDirectory(self, avatarId): 
-        temp_home = self.TempFS_factory.get_temp_fs() # Add error handeling
-        return self.userHome.child(avatarId)
+    def getHomeDirectory(self, avatarId):
+        #userHome = self.userHome.child(avatarId)
+        #print(userHome)
+        user = str(avatarId.decode('utf-8'))
+        temp_home = self.TempFSFactory.get_temp_fs(user) # Add error handeling
+        tempHome = filepath.FilePath(temp_home)
+        print(tempHome)
+        return tempHome
 
 @implementer(ICredentialsChecker)
 class DenyAllAccess:
