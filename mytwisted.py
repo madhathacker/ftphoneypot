@@ -13,6 +13,7 @@ import uuid
 from twisted.protocols.ftp import FTP, BaseFTPRealm, FTPRealm, IFTPShell, AuthorizationError
 from twisted.cred.checkers import ICredentialsChecker
 # Required for Patched Login
+from twisted.protocols.ftp import GUEST_LOGGED_IN_PROCEED, USR_LOGGED_IN_PROCEED
 from twisted.cred import credentials, error as cred_error
 from zope.interface import implementer
 from twisted.python import filepath, failure
@@ -52,9 +53,6 @@ class AllowAllAccess:
 
     def requestAvatarId(self, credentials):
         return defer.succeed(credentials.username)
-
-GUEST_LOGGED_IN_PROCEED = "230.2"
-USR_LOGGED_IN_PROCEED = "230.1"
 
 class PatchedFtpProtocol(FTP):
     def __init__(self):
