@@ -3,7 +3,7 @@
 An example FTP server with minimal user authentication from Twisted Documentation. 
 """
 # Logging
-import myfactories
+import colorlog, logging, sys
 
 # Config File
 from dataclasses import dataclass
@@ -15,7 +15,7 @@ from omegaconf import DictConfig, OmegaConf, MISSING
 from twisted.cred.checkers import AllowAnonymousAccess, FilePasswordDB
 from twisted.cred.portal import Portal
 from twisted.internet import reactor
-from twisted.protocols.ftp import FTPFactory, FTPRealm
+from twisted.protocols.ftp import FTPFactory
 from mytwisted import PatchedFtpProtocol, VirtualFTPRealm, DenyAllAccess, AllowAllAccess
 
 # Filepaths

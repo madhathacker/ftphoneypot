@@ -34,6 +34,7 @@ class TempFSFactory(threading.Thread):
         print('Stopping TempFSFactory.')
         self.stop_event.set()
         self.replenish_event.set()
+        # Cleanup here?
 
     def get_temp_fs(self):
         temp_fs = self.fs_queue.get()
