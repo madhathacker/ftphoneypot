@@ -7,6 +7,8 @@ Patch is based on fixing bug in Twisted FTP creds check
 # https://github.com/twisted/twisted/blob/1d439dd1d9c7d302641550a925705d479ea5457f/src/twisted/protocols/ftp.py
 # https://github.com/twisted/twisted/tree/1d439dd1d9c7d302641550a925705d479ea5457f/src/twisted/cred
 
+import sys, logging, colorlog
+from colorama import Fore, Style
 import uuid
 from twisted.protocols.ftp import FTP, BaseFTPRealm, FTPRealm, IFTPShell, AuthorizationError
 from twisted.cred.checkers import ICredentialsChecker
@@ -19,7 +21,7 @@ from myfactories import TempFSFactory
 
 class VirtualFTPRealm(FTPRealm):
     def __init__(self, anonymousRoot, userHome):
-        print("Initializing FTP Realm...")
+        logging.info("Initializing FTP Realm...")
         BaseFTPRealm.__init__(self, anonymousRoot)
         self.userHome = filepath.FilePath(userHome)
         self.TempFSFactory = TempFSFactory(userHome)
@@ -35,7 +37,7 @@ class VirtualFTPRealm(FTPRealm):
         user = str(avatarId.decode('utf-8'))
         temp_home = self.TempFSFactory.get_temp_fs(user) # Add error handeling
         tempHome = filepath.FilePath(temp_home)
-        print(tempHome)
+        logging.info(f"{tempHome=}")
         return tempHome
 
 @implementer(ICredentialsChecker)
@@ -62,13 +64,15 @@ class PatchedFtpProtocol(FTP):
     
     # pathing events to log activity
     def connectionMade(self):
-        #print(f'[{ms_time}] {Fore.GREEN}New client connected!{Style.RESET_ALL} {Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL}')
+        # LOGGING NEEDS TO ALTERED! Maybe split into it's own class and deffine formatting!
+        self.connected_client = self.transport.getPeer()
+        logging.info(f'{Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} {Fore.GREEN}New client connected!{Style.RESET_ALL}')
         FTP.connectionMade(self)
     def lineReceived(self, line):
-        #print(f'[{ms_time}]   {Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} Command Received: {line}')
+        logging.info(f'{Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} Command Received: {line}')
         FTP.lineReceived(self, line)
     def connectionLost(self, reason):
-        #print(f'[{ms_time}] {Fore.RED}Client disconnected!{Style.RESET_ALL} {Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL}')
+        logging.info(f'{Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} {Fore.RED}Client disconnected!{Style.RESET_ALL}')
         FTP.connectionLost(self, reason)
 
     # patching login to convert username and password to bytes to fix bug

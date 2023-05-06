@@ -40,7 +40,17 @@ cs.store(name="ftphp_config", node=config_name)
 
 @hydra.main(version_base=None, config_path=config_path, config_name=config_name)
 def ftphp(cfg : DictConfig)-> None:
-    print(OmegaConf.to_yaml(cfg))
+    logging.basicConfig(
+        filename=cfg.logging.logfile, 
+        level=cfg.logging.loglevel, 
+        format = cfg.logging.format, 
+        datefmt = cfg.logging.datefmt)
+    log = logging.getLogger()
+    handler = colorlog.StreamHandler(sys.stdout)
+    handler.setFormatter(colorlog.ColoredFormatter('%(white)s%(asctime)s%(reset)s | %(log_color)s%(levelname)s%(reset)s - %(message)s'))
+    log.addHandler(handler)
+
+    log.debug(OmegaConf.to_yaml(cfg))
 
     # FTP Configuration Variables
     ftp_port = cfg.ftphp.port
@@ -63,7 +73,7 @@ def ftphp(cfg : DictConfig)-> None:
             ftp_checkers.append(AllowAllAccess())
     else:
         ftp_checkers.append(DenyAllAccess())
-    #print(ftp_checkers)
+    log.debug(f"{ftp_checkers=}")
 
     # Putting it all together
     try:
@@ -76,7 +86,7 @@ def ftphp(cfg : DictConfig)-> None:
 
         # Starts the reactor loop on specified port and interface. Connections will be handled by the factory.
         reactor.listenTCP(port=ftp_port, factory=ftp_factory, backlog=50, interface='')
-        print("Starting Reactor...")
+        log.info("Starting Reactor...")
         reactor.run()
         ftp_realm.stop()
     except Exception as e:

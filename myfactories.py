@@ -6,6 +6,7 @@ import fs
 from fs.tempfs import TempFS
 from fs.copy import copy_fs
 import time
+import logging
 
 class TempFSFactory(threading.Thread):
     def __init__(self, root_folder, queue_size = 5):
@@ -34,7 +35,7 @@ class TempFSFactory(threading.Thread):
                 queue_name = str(dir_name)[1:]
                 self.queues[queue_name] = queue.Queue()
                 self._generator(dir_path, self.queues[queue_name])
-            print(self.queues)
+            logging.debug(f"TempFS Queues: {self.queues}")
             return
 
     def _generator(self, raw_folder, TempFolder_queue):
@@ -67,7 +68,7 @@ class TempFSFactory(threading.Thread):
         return
     
     def stop(self):
-        print('Stopping TempFSFactory.')
+        logging.info('Stopping TempFSFactory.')
         self.stop_event.set()
         self.replenish_event.set()
         # Cleanup here?
@@ -77,7 +78,6 @@ class TempFSFactory(threading.Thread):
         # Grab a TempFS from the correct user queue
         temp_fs = self.queues[userHome].get()
         tempFS_path = temp_fs.getsyspath('/')
-        print(tempFS_path)
         self.replenish_event.set()
         return tempFS_path
     

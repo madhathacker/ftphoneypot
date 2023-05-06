@@ -1,3 +1,15 @@
+# Don't touch these... for config parsing
+defaults:  
+  - _self_  
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled  
+
+hydra:  
+  output_subdir: null  
+  run:  
+    dir: .
+
+# Start of Main Configuration
 ftphp:
   port: 2121
   # Search NMAP Signatures for server you would like to mimic
@@ -9,5 +21,7 @@ ftphp:
   root: root # Directory of files to use for honeypot
 
 logging:
-  level: 0
-  logfile: ./ftphp.log
+  loglevel: DEBUG
+  logfile: ftphp.log
+  format: "%(asctime)s %(levelname)s: %(message)s"
+  datefmt: "%d.%m.%Y %H:%M:%S"
