@@ -37,7 +37,6 @@ class VirtualFTPRealm(FTPRealm):
         user = str(avatarId.decode('utf-8'))
         temp_home = self.TempFSFactory.get_temp_fs(user) # Add error handeling
         tempHome = filepath.FilePath(temp_home)
-        logging.info(f"{tempHome=}")
         return tempHome
 
 @implementer(ICredentialsChecker)

@@ -16,12 +16,12 @@ ftphp:
   banner: Fucking Twisted Python Honey Pot
   allow_login: true # If True, creates virtual filesystem. Otherwise captures login only.
   allow_anonymous: true
-  restrict_login: true # Whether to use passwd or allow all logins
+  restrict_login: false # Whether to use passwd or allow all logins
   pass_file: passwd # Password file to use if allow_login is true
   root: root # Directory of files to use for honeypot
 
 logging:
-  loglevel: DEBUG
+  loglevel: INFO # Default to INFO
   logfile: ftphp.log
   format: "%(asctime)s %(levelname)s: %(message)s"
   datefmt: "%d.%m.%Y %H:%M:%S"

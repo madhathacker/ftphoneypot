@@ -28,6 +28,7 @@ class TempFSFactory(threading.Thread):
 
     def _startup(self):
         '''Given a source directory, create a list of TempFolder queues for each subfolder.'''
+        logging.info("Starting TempFSFactory.")
         root_path = str(self.sourceFS)
         with fs.open_fs(root_path) as root:
             for dir_name in root.walk.dirs():
@@ -76,8 +77,13 @@ class TempFSFactory(threading.Thread):
 
     def get_temp_fs(self, userHome):
         # Grab a TempFS from the correct user queue
-        temp_fs = self.queues[userHome].get()
+        try:
+            temp_fs = self.queues[userHome].get()
+        except:
+            logging.warning("Unkown User!")
+            temp_fs = self.queues["wildcard"].get()
         tempFS_path = temp_fs.getsyspath('/')
+        logging.debug(f"{tempFS_path=}")
         self.replenish_event.set()
         return tempFS_path
     

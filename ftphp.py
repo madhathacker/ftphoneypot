@@ -3,7 +3,7 @@
 An example FTP server with minimal user authentication from Twisted Documentation. 
 """
 # Logging
-import colorlog, logging, sys
+import colorlog, logging, sys, time
 
 # Config File
 from dataclasses import dataclass
@@ -40,8 +40,10 @@ cs.store(name="ftphp_config", node=config_name)
 
 @hydra.main(version_base=None, config_path=config_path, config_name=config_name)
 def ftphp(cfg : DictConfig)-> None:
+    timestamp = str(int(time.time()))
+    logfile = "./"+timestamp+"_"+cfg.logging.logfile
     logging.basicConfig(
-        filename=cfg.logging.logfile, 
+        filename=logfile, 
         level=cfg.logging.loglevel, 
         format = cfg.logging.format, 
         datefmt = cfg.logging.datefmt)
@@ -50,6 +52,7 @@ def ftphp(cfg : DictConfig)-> None:
     handler.setFormatter(colorlog.ColoredFormatter('%(white)s%(asctime)s%(reset)s | %(log_color)s%(levelname)s%(reset)s - %(message)s'))
     log.addHandler(handler)
 
+    log.info(f"Logging to: {logfile}")
     log.debug(OmegaConf.to_yaml(cfg))
 
     # FTP Configuration Variables
