@@ -1,4 +1,5 @@
-outputs
 __pycache__
 *.log
 temp
+outputs
+root/*
