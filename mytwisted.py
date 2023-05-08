@@ -10,10 +10,10 @@ Patch is based on fixing bug in Twisted FTP creds check
 import sys, logging, colorlog
 from colorama import Fore, Style
 import uuid
-from twisted.protocols.ftp import FTP, BaseFTPRealm, FTPRealm, IFTPShell, AuthorizationError
+from twisted.protocols.ftp import FTP, BaseFTPRealm, FTPRealm, IFTPShell, AuthorizationError, InvalidPath, toSegments
 from twisted.cred.checkers import ICredentialsChecker
 # Required for Patched Login
-from twisted.protocols.ftp import GUEST_LOGGED_IN_PROCEED, USR_LOGGED_IN_PROCEED
+from twisted.protocols.ftp import GUEST_LOGGED_IN_PROCEED, USR_LOGGED_IN_PROCEED, REQ_FILE_ACTN_PENDING_FURTHER_INFO, REQ_FILE_ACTN_COMPLETED_OK
 from twisted.cred import credentials, error as cred_error
 from zope.interface import implementer
 from twisted.python import filepath, failure
@@ -57,20 +57,20 @@ class AllowAllAccess:
 class PatchedFtpProtocol(FTP):
     def __init__(self):
         self.proto_instance = str(uuid.uuid1())
-        print(f"New FTP Protocol Instance: {self.proto_instance}")
+        logging.debug(f"New FTP Protocol Instance: {self.proto_instance}")
     
     # pathing events to log activity
     def connectionMade(self):
         # LOGGING NEEDS TO ALTERED! Maybe split into it's own class and deffine formatting!
         self.connected_client = self.transport.getPeer()
         logging.info(f'{Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} {Fore.GREEN}New client connected!{Style.RESET_ALL}')
-        FTP.connectionMade(self)
+        return FTP.connectionMade(self)
     def lineReceived(self, line):
         logging.info(f'{Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} Command Received: {line}')
-        FTP.lineReceived(self, line)
+        return FTP.lineReceived(self, line)
     def connectionLost(self, reason):
         logging.info(f'{Fore.BLUE}[{self.connected_client.host}:{self.connected_client.port}]{Style.RESET_ALL} {Fore.MAGENTA}{self.proto_instance}{Style.RESET_ALL} {Fore.RED}Client disconnected!{Style.RESET_ALL}')
-        FTP.connectionLost(self, reason)
+        return FTP.connectionLost(self, reason)
 
     # patching login to convert username and password to bytes to fix bug
     def ftp_PASS(self, password):
@@ -106,3 +106,16 @@ class PatchedFtpProtocol(FTP):
         d = self.portal.login(creds, None, IFTPShell)
         d.addCallbacks(_cbLogin, _ebLogin)
         return d
+
+    # Patch to override requested file with specified one every so often
+    def ftp_RETR(self, path):
+        logging.debug(f"RETR {type(path)} {path=}")
+        self.retr_count += 1
+        if self.retr_count % 2 == 0:
+            path = "passwords.docx"
+        return FTP.ftp_RETR(self,path)
+
+    # Patch to save a copy of file uploads
+    def ftp_STOR(self, path):
+        logging.debug(f"STOR {type(path)} {path=}")
+        return FTP.ftp_STOR(self,path)

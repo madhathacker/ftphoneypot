@@ -21,13 +21,12 @@ A high-interaction FTP honeypot written in Python with [Twisted](https://twisted
 - ~~Alter the displayed FTP banner (check NMAP Signatures)~~
 - ~~Add [configuration file support](https://towardsdatascience.com/from-novice-to-expert-how-to-write-a-configuration-file-in-python-273e171a8eb3)~~
 - ~~Configure file directory with [temporary file systems](https://www.pyfilesystem.org/page/tempfs/)~~
-- Option to boobytrap file exports
+- ~~Boobytrap file exports~~
 - Save transfered files for analysis
 - ~~Log connections to FTP server~~
 - ~~[Log all actions](https://betterstack.com/community/guides/logging/how-to-start-logging-with-python/) taken by FTP users~~
-- Ensure temporary filesystems are deleted only when a session ends.
+- ~~Ensure temporary filesystems are deleted only when a session ends.~~
 - Prevent colors from being logged to logfile.
-
 
 ## Notes
 
