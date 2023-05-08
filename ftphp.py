@@ -41,12 +41,19 @@ cs.store(name="ftphp_config", node=config_name)
 @hydra.main(version_base=None, config_path=config_path, config_name=config_name)
 def ftphp(cfg : DictConfig)-> None:
     timestamp = str(int(time.time()))
-    logfile = "./"+timestamp+"_"+cfg.logging.logfile
+    
+    log_path = Path(cfg.logging.logfile).parent
+    log_name = timestamp+"_"+str(Path(cfg.logging.logfile).name)
+    log_path.mkdir(parents=True, exist_ok=True)
+
+    logfile = log_path / log_name
+
     logging.basicConfig(
         filename=logfile, 
         level=cfg.logging.loglevel, 
         format = cfg.logging.format, 
         datefmt = cfg.logging.datefmt)
+    
     log = logging.getLogger()
     handler = colorlog.StreamHandler(sys.stdout)
     handler.setFormatter(colorlog.ColoredFormatter('%(white)s%(asctime)s%(reset)s | %(log_color)s%(levelname)s%(reset)s - %(message)s'))
@@ -60,7 +67,6 @@ def ftphp(cfg : DictConfig)-> None:
     ftp_banner = cfg.ftphp.banner
 
     # Path Variables
-    cwd = Path.cwd()
     ftp_root = Path(cfg.ftphp.root)
     anon_root = ftp_root / 'anonymous'
     pass_file = 'passwd'
@@ -91,7 +97,9 @@ def ftphp(cfg : DictConfig)-> None:
         reactor.listenTCP(port=ftp_port, factory=ftp_factory, backlog=50, interface='')
         log.info("Starting Reactor...")
         reactor.run()
+        log.info("Stopping Reactor...")        
         ftp_realm.stop()
+        log.info("Goodbye!")
     except Exception as e:
         print(e)
         exit(-1)

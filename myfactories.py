@@ -28,7 +28,7 @@ class TempFSFactory(threading.Thread):
 
     def _startup(self):
         '''Given a source directory, create a list of TempFolder queues for each subfolder.'''
-        logging.info("Starting TempFSFactory.")
+        logging.info("Starting TempFSFactory...")
         root_path = str(self.sourceFS)
         with fs.open_fs(root_path) as root:
             for dir_name in root.walk.dirs():
@@ -69,7 +69,7 @@ class TempFSFactory(threading.Thread):
         return
     
     def stop(self):
-        logging.info('Stopping TempFSFactory.')
+        logging.info('Stopping TempFSFactory...')
         self.stop_event.set()
         self.replenish_event.set()
         # Cleanup here?
