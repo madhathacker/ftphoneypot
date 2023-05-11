@@ -31,11 +31,12 @@ class TempFSFactory(threading.Thread):
         logging.info("Starting TempFSFactory...")
         root_path = str(self.sourceFS)
         with fs.open_fs(root_path) as root:
-            for dir_name in root.walk.dirs():
-                dir_path = fs.path.combine(root_path, dir_name)
-                queue_name = str(dir_name)[1:]
-                self.queues[queue_name] = queue.Queue()
-                self._generator(dir_path, self.queues[queue_name])
+            for entry in root.scandir('/'):
+                if entry.is_dir:
+                    dir_name = entry.name
+                    dir_path = fs.path.combine(root_path, dir_name)
+                    self.queues[dir_name] = queue.Queue()
+                    self._generator(dir_path, self.queues[dir_name])
             logging.debug(f"TempFS Queues: {self.queues}")
             return
 
@@ -45,7 +46,7 @@ class TempFSFactory(threading.Thread):
             timestamp = str(int(time.time()))
             folder_path = Path(raw_folder)
             folder_name = folder_path.name
-            tempFS_name = timestamp+folder_name
+            tempFS_name = '_'+folder_name+'_'+timestamp
             # Need to rewrite FTP protocol to not close the FS on every action
             tempFS = TempFS(tempFS_name, temp_dir=self.tempFS_dir, auto_clean=False)
             copy_fs(raw_folder, tempFS)
@@ -62,10 +63,11 @@ class TempFSFactory(threading.Thread):
             # Should implement a way to signal which UserFolder to Generate!
             root_path = str(self.sourceFS)
             with fs.open_fs(root_path) as root:
-                for dir_name in root.walk.dirs():
-                    dir_path = fs.path.combine(root_path, dir_name)
-                    queue_name = str(dir_name)[1:]
-                    self._generator(dir_path, self.queues[queue_name])
+                for entry in root.scandir('/'):
+                    if entry.is_dir:
+                        dir_name = entry.name
+                        dir_path = fs.path.combine(root_path, dir_name)
+                        self._generator(dir_path, self.queues[dir_name])
         return
     
     def stop(self):
