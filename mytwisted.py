@@ -7,18 +7,20 @@ Patch is based on fixing bug in Twisted FTP creds check
 # https://github.com/twisted/twisted/blob/1d439dd1d9c7d302641550a925705d479ea5457f/src/twisted/protocols/ftp.py
 # https://github.com/twisted/twisted/tree/1d439dd1d9c7d302641550a925705d479ea5457f/src/twisted/cred
 
-import sys, logging, colorlog
+import logging, uuid
 from colorama import Fore, Style
-import uuid
+
+from myfactories import TempFSFactory
+
 from twisted.protocols.ftp import FTP, BaseFTPRealm, FTPRealm, IFTPShell, AuthorizationError, InvalidPath, toSegments
 from twisted.cred.checkers import ICredentialsChecker
+
 # Required for Patched Login
 from twisted.protocols.ftp import GUEST_LOGGED_IN_PROCEED, USR_LOGGED_IN_PROCEED, REQ_FILE_ACTN_PENDING_FURTHER_INFO, REQ_FILE_ACTN_COMPLETED_OK
 from twisted.cred import credentials, error as cred_error
 from zope.interface import implementer
 from twisted.python import filepath, failure
 from twisted.internet import defer
-from myfactories import TempFSFactory
 
 class VirtualFTPRealm(FTPRealm):
     def __init__(self, anonymousRoot, userHome):
@@ -57,6 +59,7 @@ class AllowAllAccess:
 class PatchedFtpProtocol(FTP):
     def __init__(self):
         self.proto_instance = str(uuid.uuid1())
+        self.retr_count = 0
         logging.debug(f"New FTP Protocol Instance: {self.proto_instance}")
     
     # pathing events to log activity
