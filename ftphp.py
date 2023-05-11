@@ -80,8 +80,10 @@ def ftphp(cfg : DictConfig)-> None:
             ftp_checkers.append(FilePasswordDB(pass_file))
         else:
             ftp_checkers.append(AllowAllAccess())
+            log.warn("Granting Access to All Login Attempts!")
     else:
         ftp_checkers.append(DenyAllAccess())
+        log.warn("Denying Access to All Login Attempts!")
     log.debug(f"{ftp_checkers=}")
 
     # Putting it all together
